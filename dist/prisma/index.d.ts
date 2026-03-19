@@ -1,10 +1,3 @@
-interface PrismaClientLike {
-    $connect(): Promise<void>;
-    $disconnect(): Promise<void>;
-}
-interface CreatePrismaClientOptions {
-    log?: string[];
-}
 /**
  * Create a singleton PrismaClient instance.
  *
@@ -13,10 +6,7 @@ interface CreatePrismaClientOptions {
  * generated Prisma client with different models.
  *
  * @param PrismaClientClass - The PrismaClient class from '@prisma/client'
- * @param options - Optional Prisma client options (e.g., log levels)
+ * @param options - Constructor options passed directly to PrismaClient
  */
-export declare function createPrismaClient<T extends PrismaClientLike>(PrismaClientClass: new (options?: {
-    log?: string[];
-}) => T, options?: CreatePrismaClientOptions): T;
-export {};
+export declare function createPrismaClient<T>(PrismaClientClass: new (options?: any) => T, options?: Record<string, unknown>): T;
 //# sourceMappingURL=index.d.ts.map

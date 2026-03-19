@@ -1,16 +1,3 @@
-interface PrismaClientLike {
-  $connect(): Promise<void>;
-  $disconnect(): Promise<void>;
-}
-
-interface PrismaClientConstructor {
-  new (options?: { log?: string[] }): PrismaClientLike;
-}
-
-interface CreatePrismaClientOptions {
-  log?: string[];
-}
-
 /**
  * Create a singleton PrismaClient instance.
  *
@@ -19,11 +6,12 @@ interface CreatePrismaClientOptions {
  * generated Prisma client with different models.
  *
  * @param PrismaClientClass - The PrismaClient class from '@prisma/client'
- * @param options - Optional Prisma client options (e.g., log levels)
+ * @param options - Constructor options passed directly to PrismaClient
  */
-export function createPrismaClient<T extends PrismaClientLike>(
-  PrismaClientClass: new (options?: { log?: string[] }) => T,
-  options?: CreatePrismaClientOptions
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function createPrismaClient<T>(
+  PrismaClientClass: new (options?: any) => T,
+  options?: Record<string, unknown>
 ): T {
   const globalForPrisma = globalThis as unknown as {
     __storeCorePrisma: T | undefined;
@@ -31,11 +19,7 @@ export function createPrismaClient<T extends PrismaClientLike>(
 
   const client =
     globalForPrisma.__storeCorePrisma ??
-    new PrismaClientClass(
-      options?.log
-        ? { log: options.log }
-        : undefined
-    );
+    new PrismaClientClass(options);
 
   if (process.env.NODE_ENV !== 'production') {
     globalForPrisma.__storeCorePrisma = client;
