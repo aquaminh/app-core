@@ -1,6 +1,6 @@
 {
   "name": "@gplc/store-core",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Shared infrastructure utilities for GPLC store frontends",
   "type": "module",
   "main": "./dist/index.js",
