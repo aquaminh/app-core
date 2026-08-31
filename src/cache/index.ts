@@ -78,31 +78,34 @@ export function createCacheClient(config?: CacheClientConfig): CacheClient {
   // Lazy-import to keep @upstash/redis optional
   let redis: RedisLike | null = null;
   let redisDynamic: RedisLike | null = null;
-  let initialized = false;
+  let initPromise: Promise<void> | null = null;
 
-  function init(): void {
-    if (initialized) return;
-    initialized = true;
+  // Memoized so concurrent first calls share one import instead of the second
+  // caller seeing a half-initialized state.
+  function init(): Promise<void> {
+    initPromise ??= (async () => {
+      if (!isRedisConfigured) return;
 
-    if (!isRedisConfigured) return;
+      // Dynamic import keeps @upstash/redis optional AND works in both dist
+      // formats - the ESM build has no require(), the CJS build compiles this
+      // to one.
+      const { Redis } = await import('@upstash/redis');
 
-    // Dynamic import isn't practical here (sync factory), so we require at call time.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { Redis } = require('@upstash/redis') as typeof import('@upstash/redis');
-
-    redis = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL!,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-      cache: 'force-cache',
-    }) as RedisLike;
-
-    if (config?.enableDynamicClient) {
-      redisDynamic = new Redis({
+      redis = new Redis({
         url: process.env.UPSTASH_REDIS_REST_URL!,
         token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-        cache: 'no-store',
+        cache: 'force-cache',
       }) as RedisLike;
-    }
+
+      if (config?.enableDynamicClient) {
+        redisDynamic = new Redis({
+          url: process.env.UPSTASH_REDIS_REST_URL!,
+          token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+          cache: 'no-store',
+        }) as RedisLike;
+      }
+    })();
+    return initPromise;
   }
 
   async function readThrough<T>(
@@ -141,7 +144,7 @@ export function createCacheClient(config?: CacheClientConfig): CacheClient {
     fetcher: () => Promise<T>,
     ttlSeconds = 300
   ): Promise<T> {
-    init();
+    await init();
     if (!redis) return fetcher();
     return readThrough(redis, key, fetcher, ttlSeconds);
   }
@@ -151,13 +154,13 @@ export function createCacheClient(config?: CacheClientConfig): CacheClient {
     fetcher: () => Promise<T>,
     ttlSeconds = 300
   ): Promise<T> {
-    init();
+    await init();
     if (!redisDynamic) return fetcher();
     return readThrough(redisDynamic, key, fetcher, ttlSeconds);
   }
 
   async function invalidateCache(key: string): Promise<void> {
-    init();
+    await init();
     const client = redisDynamic ?? redis;
     if (!client) return;
 
@@ -169,7 +172,7 @@ export function createCacheClient(config?: CacheClientConfig): CacheClient {
   }
 
   async function invalidateCachePattern(pattern: string): Promise<void> {
-    init();
+    await init();
     const client = redisDynamic ?? redis;
     if (!client) return;
 

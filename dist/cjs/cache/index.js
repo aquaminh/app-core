@@ -1,3 +1,39 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createCacheClient = createCacheClient;
 function isEnvelope(v) {
     return (typeof v === 'object' &&
         v !== null &&
@@ -24,7 +60,7 @@ const CLOCK_SKEW_GRACE_MS = 5_000;
  *   immediately.
  * @param config.keyPrefix - App-scoped prefix applied to every key.
  */
-export function createCacheClient(config) {
+function createCacheClient(config) {
     const isRedisConfigured = !!process.env.UPSTASH_REDIS_REST_URL && !!process.env.UPSTASH_REDIS_REST_TOKEN;
     const prefix = config?.keyPrefix ?? '';
     const k = (key) => prefix + key;
@@ -41,7 +77,7 @@ export function createCacheClient(config) {
             // Dynamic import keeps @upstash/redis optional AND works in both dist
             // formats - the ESM build has no require(), the CJS build compiles this
             // to one.
-            const { Redis } = await import('@upstash/redis');
+            const { Redis } = await Promise.resolve().then(() => __importStar(require('@upstash/redis')));
             redis = new Redis({
                 url: process.env.UPSTASH_REDIS_REST_URL,
                 token: process.env.UPSTASH_REDIS_REST_TOKEN,
@@ -129,4 +165,3 @@ export function createCacheClient(config) {
     }
     return result;
 }
-//# sourceMappingURL=index.js.map

@@ -1,3 +1,39 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createRateLimiters = createRateLimiters;
 /**
  * Create rate limiters backed by Upstash Redis.
  *
@@ -7,7 +43,7 @@
  * @param definitions - Map of limiter name to { limit, window } config.
  *   Example: { auth: { limit: 5, window: '1 m' }, api: { limit: 60, window: '1 m' } }
  */
-export function createRateLimiters(definitions) {
+function createRateLimiters(definitions) {
     const isRedisConfigured = !!process.env.UPSTASH_REDIS_REST_URL && !!process.env.UPSTASH_REDIS_REST_TOKEN;
     // The map is created once and MUTATED on init so callers that grabbed the
     // reference through the getter before init still see limiters appear.
@@ -39,8 +75,8 @@ export function createRateLimiters(definitions) {
                 return;
             }
             const [{ Ratelimit }, { Redis }] = await Promise.all([
-                import('@upstash/ratelimit'),
-                import('@upstash/redis'),
+                Promise.resolve().then(() => __importStar(require('@upstash/ratelimit'))),
+                Promise.resolve().then(() => __importStar(require('@upstash/redis'))),
             ]);
             if (!initialized)
                 buildLimiters(Ratelimit, Redis);
@@ -116,4 +152,3 @@ export function createRateLimiters(definitions) {
         withRateLimit,
     };
 }
-//# sourceMappingURL=index.js.map

@@ -1,6 +1,6 @@
 {
   "name": "@aquaminh/app-core",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "description": "Shared infrastructure utilities for app-dev Next.js apps (formerly @gplc/store-core)",
   "type": "module",
   "main": "./dist/index.js",
@@ -8,37 +8,46 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "require": "./dist/cjs/index.js",
       "default": "./dist/index.js"
     },
     "./crypto": {
       "types": "./dist/crypto/encryption.d.ts",
+      "require": "./dist/cjs/crypto/encryption.js",
       "default": "./dist/crypto/encryption.js"
     },
     "./cache": {
       "types": "./dist/cache/index.d.ts",
+      "require": "./dist/cjs/cache/index.js",
       "default": "./dist/cache/index.js"
     },
     "./rate-limit": {
       "types": "./dist/rate-limit/index.d.ts",
+      "require": "./dist/cjs/rate-limit/index.js",
       "default": "./dist/rate-limit/index.js"
     },
     "./email": {
       "types": "./dist/email/client.d.ts",
+      "require": "./dist/cjs/email/client.js",
       "default": "./dist/email/client.js"
     },
     "./cron": {
       "types": "./dist/cron/auth.d.ts",
+      "require": "./dist/cjs/cron/auth.js",
       "default": "./dist/cron/auth.js"
     },
     "./prisma": {
       "types": "./dist/prisma/index.d.ts",
+      "require": "./dist/cjs/prisma/index.js",
       "default": "./dist/prisma/index.js"
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run build:cjs",
+    "build:cjs": "tsc -p tsconfig.cjs.json && node -e \"require('fs').writeFileSync('dist/cjs/package.json', JSON.stringify({ type: 'commonjs' }) + '\\\\n')\"",
     "clean": "rm -rf dist",
-    "test": "node --test test/"
+    "test": "node --test test/",
+    "release:check": "npm run clean && npm run build && npm test && test -z \"$(git status --porcelain -- dist)\" || (echo 'dist/ is stale (modified OR untracked build output) or tests failed - commit a fresh dist before tagging' && exit 1)"
   },
   "peerDependencies": {
     "next": ">=15",

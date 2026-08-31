@@ -37,25 +37,27 @@ interface EmailClient {
  * The logEmail callback is injected by the app (since it needs the app's Prisma client).
  */
 export function createEmailClient(config: EmailClientConfig): EmailClient {
-  let _resend: ResendLike | null = null;
+  // Memoized so concurrent first sends share one import; dynamic import keeps
+  // resend an optional peer and works in both dist formats (the ESM build has
+  // no require()).
+  let _resendPromise: Promise<ResendLike | null> | null = null;
 
-  function getResendClient(): ResendLike | null {
-    if (_resend) return _resend;
-    if (!process.env.RESEND_API_KEY) {
-      console.warn('RESEND_API_KEY not set - emails will not be sent');
-      return null;
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { Resend } = require('resend') as typeof import('resend');
-    _resend = new Resend(process.env.RESEND_API_KEY) as unknown as ResendLike;
-    return _resend;
+  function getResendClient(): Promise<ResendLike | null> {
+    _resendPromise ??= (async () => {
+      if (!process.env.RESEND_API_KEY) {
+        console.warn('RESEND_API_KEY not set - emails will not be sent');
+        return null;
+      }
+      const { Resend } = await import('resend');
+      return new Resend(process.env.RESEND_API_KEY) as unknown as ResendLike;
+    })();
+    return _resendPromise;
   }
 
   async function sendEmail(
     options: SendEmailOptions
   ): Promise<{ success: boolean; id?: string; error?: string }> {
-    const resend = getResendClient();
+    const resend = await getResendClient();
 
     if (!resend) {
       console.log('[Email] Skipping send (no API key):', options.subject);

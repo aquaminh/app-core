@@ -20,27 +20,27 @@ interface RequestLike {
   headers: { get(name: string): string | null };
 }
 
-let _receiver: ReceiverLike | null = null;
-let _receiverInitialized = false;
+let _receiverPromise: Promise<ReceiverLike | null> | null = null;
 
-async function getReceiver(): Promise<ReceiverLike | null> {
-  if (_receiverInitialized) return _receiver;
-  _receiverInitialized = true;
+// Memoized so concurrent first requests share one import - otherwise a second
+// cold-start QStash call could observe a half-initialized state and 401 a
+// validly-signed request.
+function getReceiver(): Promise<ReceiverLike | null> {
+  _receiverPromise ??= (async () => {
+    if (!process.env.QSTASH_CURRENT_SIGNING_KEY || !process.env.QSTASH_NEXT_SIGNING_KEY) {
+      return null;
+    }
 
-  if (!process.env.QSTASH_CURRENT_SIGNING_KEY || !process.env.QSTASH_NEXT_SIGNING_KEY) {
-    return null;
-  }
-
-  // Dynamic import keeps @upstash/qstash an optional peer AND works in pure
-  // Node ESM - this dist is ESM, where a bare require() is a ReferenceError
-  // outside bundlers that shim it.
-  const { Receiver } = await import('@upstash/qstash');
-  _receiver = new Receiver({
-    currentSigningKey: process.env.QSTASH_CURRENT_SIGNING_KEY,
-    nextSigningKey: process.env.QSTASH_NEXT_SIGNING_KEY,
-  }) as unknown as ReceiverLike;
-
-  return _receiver;
+    // Dynamic import keeps @upstash/qstash an optional peer AND works in pure
+    // Node ESM - this dist is ESM, where a bare require() is a ReferenceError
+    // outside bundlers that shim it.
+    const { Receiver } = await import('@upstash/qstash');
+    return new Receiver({
+      currentSigningKey: process.env.QSTASH_CURRENT_SIGNING_KEY,
+      nextSigningKey: process.env.QSTASH_NEXT_SIGNING_KEY,
+    }) as unknown as ReceiverLike;
+  })();
+  return _receiverPromise;
 }
 
 let _warnedMissingSecret = false;
