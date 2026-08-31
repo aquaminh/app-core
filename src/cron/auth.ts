@@ -8,6 +8,8 @@
  * Reads CRON_SECRET, QSTASH_CURRENT_SIGNING_KEY, QSTASH_NEXT_SIGNING_KEY from env.
  */
 
+import { timingSafeEqual } from 'node:crypto';
+
 export interface CronAuthResult {
   authorized: boolean;
   method: 'bearer' | 'qstash' | 'none';
@@ -39,13 +41,32 @@ function getReceiver(): ReceiverLike | null {
   return _receiver;
 }
 
+let _warnedMissingSecret = false;
+
+/** Constant-time string compare that never throws on length mismatch. */
+function safeEqual(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return timingSafeEqual(bufA, bufB);
+}
+
 export async function verifyCronAuth(
   request: RequestLike,
   body?: string
 ): Promise<CronAuthResult> {
-  // Method 1: Bearer token (typically GET requests or manual calls)
+  // Method 1: Bearer token (typically GET requests or manual calls).
+  // Guard against an unset CRON_SECRET — without it, the literal header
+  // "Bearer undefined" would authenticate on any deployment missing the env var.
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret && !_warnedMissingSecret) {
+    _warnedMissingSecret = true;
+    // Misconfiguration, not an auth failure: name the env var so a deployment
+    // missing it doesn't 401 every cron route with no pointer to the cause.
+    console.warn('[app-core/cron] CRON_SECRET is not set - Bearer cron auth is disabled');
+  }
   const authHeader = request.headers.get('authorization');
-  if (authHeader === `Bearer ${process.env.CRON_SECRET}`) {
+  if (cronSecret && authHeader && safeEqual(authHeader, `Bearer ${cronSecret}`)) {
     return { authorized: true, method: 'bearer' };
   }
 
