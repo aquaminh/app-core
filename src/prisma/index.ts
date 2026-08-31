@@ -14,15 +14,15 @@ export function createPrismaClient<T>(
   options?: Record<string, unknown>
 ): T {
   const globalForPrisma = globalThis as unknown as {
-    __storeCorePrisma: T | undefined;
+    __appCorePrisma: T | undefined;
   };
 
   const client =
-    globalForPrisma.__storeCorePrisma ??
+    globalForPrisma.__appCorePrisma ??
     new PrismaClientClass(options);
 
   if (process.env.NODE_ENV !== 'production') {
-    globalForPrisma.__storeCorePrisma = client;
+    globalForPrisma.__appCorePrisma = client;
   }
 
   return client;

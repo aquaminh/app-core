@@ -11,10 +11,10 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createPrismaClient(PrismaClientClass, options) {
     const globalForPrisma = globalThis;
-    const client = globalForPrisma.__storeCorePrisma ??
+    const client = globalForPrisma.__appCorePrisma ??
         new PrismaClientClass(options);
     if (process.env.NODE_ENV !== 'production') {
-        globalForPrisma.__storeCorePrisma = client;
+        globalForPrisma.__appCorePrisma = client;
     }
     return client;
 }
