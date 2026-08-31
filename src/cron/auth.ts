@@ -23,7 +23,7 @@ interface RequestLike {
 let _receiver: ReceiverLike | null = null;
 let _receiverInitialized = false;
 
-function getReceiver(): ReceiverLike | null {
+async function getReceiver(): Promise<ReceiverLike | null> {
   if (_receiverInitialized) return _receiver;
   _receiverInitialized = true;
 
@@ -31,8 +31,10 @@ function getReceiver(): ReceiverLike | null {
     return null;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { Receiver } = require('@upstash/qstash') as typeof import('@upstash/qstash');
+  // Dynamic import keeps @upstash/qstash an optional peer AND works in pure
+  // Node ESM - this dist is ESM, where a bare require() is a ReferenceError
+  // outside bundlers that shim it.
+  const { Receiver } = await import('@upstash/qstash');
   _receiver = new Receiver({
     currentSigningKey: process.env.QSTASH_CURRENT_SIGNING_KEY,
     nextSigningKey: process.env.QSTASH_NEXT_SIGNING_KEY,
@@ -71,11 +73,11 @@ export async function verifyCronAuth(
   }
 
   // Method 2: QStash signature (POST requests from Upstash)
-  const receiver = getReceiver();
-  if (receiver) {
-    const signature = request.headers.get('upstash-signature');
-    if (signature) {
-      try {
+  try {
+    const receiver = await getReceiver();
+    if (receiver) {
+      const signature = request.headers.get('upstash-signature');
+      if (signature) {
         const isValid = await receiver.verify({
           signature,
           body: body ?? '',
@@ -83,10 +85,10 @@ export async function verifyCronAuth(
         if (isValid) {
           return { authorized: true, method: 'qstash' };
         }
-      } catch {
-        // Signature verification failed — fall through to unauthorized
       }
     }
+  } catch {
+    // Import or signature verification failed — fall through to unauthorized
   }
 
   return { authorized: false, method: 'none' };
