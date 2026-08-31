@@ -37,7 +37,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test": "node --test test/"
   },
   "peerDependencies": {
     "next": ">=15",
