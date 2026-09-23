@@ -1,6 +1,6 @@
 {
   "name": "@aquaminh/app-core",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Shared infrastructure utilities for app-dev Next.js apps (formerly @gplc/store-core)",
   "type": "module",
   "main": "./dist/index.js",
@@ -40,6 +40,11 @@
       "types": "./dist/prisma/index.d.ts",
       "require": "./dist/cjs/prisma/index.js",
       "default": "./dist/prisma/index.js"
+    },
+    "./mcp": {
+      "types": "./dist/mcp/index.d.ts",
+      "require": "./dist/cjs/mcp/index.js",
+      "default": "./dist/mcp/index.js"
     }
   },
   "scripts": {

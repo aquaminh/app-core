@@ -4,4 +4,5 @@ export { createRateLimiters } from './rate-limit/index.js';
 export { createEmailClient } from './email/client.js';
 export { verifyCronAuth } from './cron/auth.js';
 export { createPrismaClient } from './prisma/index.js';
+export { extractBearer, defineScopes, createMcpTokens, McpTokenInputError, createConfirmGate, canonicalJson, hashArgs, ConfirmUnavailableError, paginate, } from './mcp/index.js';
 //# sourceMappingURL=index.js.map

@@ -7,3 +7,34 @@ export type { SendEmailOptions, EmailLogParams } from './email/client.js';
 export { verifyCronAuth } from './cron/auth.js';
 export type { CronAuthResult } from './cron/auth.js';
 export { createPrismaClient } from './prisma/index.js';
+export {
+  extractBearer,
+  defineScopes,
+  createMcpTokens,
+  McpTokenInputError,
+  createConfirmGate,
+  canonicalJson,
+  hashArgs,
+  ConfirmUnavailableError,
+  paginate,
+} from './mcp/index.js';
+export type {
+  ScopeSet,
+  McpTokenRecord,
+  McpTokenListItem,
+  McpTokenDelegateLike,
+  McpPrincipalBase,
+  McpAuthError,
+  McpAuthResult,
+  McpResolveResult,
+  CreateMcpTokensConfig,
+  McpTokens,
+  McpTokenInputField,
+  ConfirmRedisLike,
+  ConfirmGateConfig,
+  ConfirmBinding,
+  ConfirmationFailure,
+  ConfirmationCheck,
+  ConfirmGate,
+  Page,
+} from './mcp/index.js';
